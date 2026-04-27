@@ -52,16 +52,16 @@ HOST_TYPE = detect_host_type()
 
 # Информационная метрика: указывает host_type в качестве метки (значение всегда равно 1)
 host_info = Info(
-    "хост_микросервиса",
+    "microservice_host",
     "Информация о хосте, на котором запущен этот микросервис"
 )
-host_info.info({"тип_хоста": HOST_TYPE})
+host_info.info({"host_type": HOST_TYPE})
 
 # Измерительный показатель: числовое представление для типа хоста микросервиса
 HOST_TYPE_MAP = {"виртуальная_машина": 1, "контейнер": 2, "голый_металл": 0}
 
 host_type_gauge = Gauge(
-    "тип_хост_микросервиса",
+    "microservice_host_type",
     "Тип хоста: 0=голый_металл, 1=виртуальная машина, 2=контейнер"
 )
 host_type_gauge.set(HOST_TYPE_MAP.get(HOST_TYPE, -1))
@@ -69,7 +69,7 @@ host_type_gauge.set(HOST_TYPE_MAP.get(HOST_TYPE, -1))
 
 start_time = time.time()
 uptime_gauge = Gauge(
-    "время_безотказной_работы_микросервиса",
+    "microservice_uptime_seconds",
     "Секунды с момента запуска микросервиса"
 )
 

@@ -9,7 +9,6 @@
     msg: "deploy_action must be 'start' or 'remove', got: '{{ deploy_action }}'"
   when: deploy_action not in ['start', 'remove']
 
-
 # Копирование исходного кода микросервиса
 - name: Create app directory
   ansible.builtin.file:
