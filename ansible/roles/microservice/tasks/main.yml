@@ -107,10 +107,3 @@
     force_kill: true
   when: deploy_mode == "container" and deploy_action == "remove"
  
-- name: Open port 8080 in firewalld
-  ansible.posix.firewalld:
-    port: 8080/tcp
-    permanent: true
-    state: enabled
-    immediate: true
-  when: deploy_action == "start"
