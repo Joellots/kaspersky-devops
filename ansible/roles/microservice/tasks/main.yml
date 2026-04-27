@@ -61,14 +61,6 @@
     daemon_reload: true
   when: deploy_mode == "host" and deploy_action == "start"
 
-- name: Disable and stop microservice service (host mode)
-  ansible.builtin.systemd:
-    name: microservice
-    enabled: false
-    state: stopped
-    daemon_reload: true
-  when: deploy_mode == "host" and deploy_action == "remove"
-
 # КОНТЕЙНЕР
 - name: Copy Dockerfile to host (container mode)
   ansible.builtin.copy:
@@ -99,11 +91,56 @@
       - "8080:8080"
   when: deploy_mode == "container" and deploy_action == "start"
 
-- name: Remove microservice container (container mode)
+# Удаление (host mode)
+- name: Stop and disable microservice service (host mode)
+  ansible.builtin.systemd:
+    name: microservice
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  when: deploy_mode == "host" and deploy_action == "remove"
+  ignore_errors: true 
+
+- name: Remove systemd service unit file (host mode)
+  ansible.builtin.file:
+    path: /etc/systemd/system/microservice.service
+    state: absent
+  when: deploy_mode == "host" and deploy_action == "remove"
+  notify: Reload systemd after removal
+
+- name: Uninstall Python dependencies (host mode)
+  ansible.builtin.pip:
+    name:
+      - prometheus_client
+    state: absent
+    executable: pip3
+  when: deploy_mode == "host" and deploy_action == "remove"
+
+- name: Remove app directory (host mode)
+  ansible.builtin.file:
+    path: /opt/microservice
+    state: absent
+  when: deploy_mode == "host" and deploy_action == "remove"
+
+# Удаление (container mode)
+- name: Stop and remove microservice container (container mode)
   community.docker.docker_container:
     name: microservice
-    image: microservice:latest
     state: absent
     force_kill: true
   when: deploy_mode == "container" and deploy_action == "remove"
- 
+  ignore_errors: true  
+
+- name: Remove microservice Docker image (container mode)
+  community.docker.docker_image:
+    name: microservice
+    tag: latest
+    state: absent
+    force_absent: true
+  when: deploy_mode == "container" and deploy_action == "remove"
+
+- name: Remove app directory (container mode)
+  ansible.builtin.file:
+    path: /opt/microservice
+    state: absent
+  when: deploy_mode == "container" and deploy_action == "remove"

@@ -4,3 +4,8 @@
     name: microservice
     state: restarted
     daemon_reload: true
+
+- name: Reload systemd after removal
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: deploy_mode == "host"
