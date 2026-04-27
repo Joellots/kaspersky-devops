@@ -10,5 +10,4 @@ terraform/terraform.tfvars
 __pycache__/
 *.pyc
 
-ansible.cfg
 README.md
