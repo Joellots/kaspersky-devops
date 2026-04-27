@@ -1,0 +1,23 @@
+---
+- name: Install Docker (container mode only)
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Install Docker via geerlingguy role
+      ansible.builtin.include_role:
+        name: geerlingguy.docker
+      when: deploy_mode == "container" 
+  vars:
+    deploy_mode: "container"
+    deploy_action: "start"
+    
+
+- name: Deploy microservice
+  hosts: all
+  become: true
+  vars:
+    deploy_mode: "host"   # переопределить с помощью -e deploy_mode=container
+    deploy_action: "start" # переопределить с помощью -e deploy_action=remove
+  roles:
+    - role: microservice
+

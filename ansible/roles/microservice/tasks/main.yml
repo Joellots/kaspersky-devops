@@ -1,0 +1,116 @@
+---
+- name: Validate deploy_mode value
+  ansible.builtin.fail:
+    msg: "deploy_mode must be 'host' or 'container', got: '{{ deploy_mode }}'"
+  when: deploy_mode not in ['host', 'container']
+
+- name: Validate deploy_action value
+  ansible.builtin.fail:
+    msg: "deploy_action must be 'start' or 'remove', got: '{{ deploy_action }}'"
+  when: deploy_action not in ['start', 'remove']
+
+
+# Копирование исходного кода микросервиса
+- name: Create app directory
+  ansible.builtin.file:
+    path: /opt/microservice
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy microservice source
+  ansible.builtin.copy:
+    src: microservice.py
+    dest: /opt/microservice/microservice.py
+    owner: root
+    group: root
+    mode: "0755"
+
+# ХОСТ
+- name: Install Python 3 and pip (host mode)
+  ansible.builtin.dnf:
+    name:
+      - python3
+      - python3-pip
+    state: present
+  when: deploy_mode == "host"
+
+- name: Install Python dependencies (host mode)
+  ansible.builtin.pip:
+    name:
+      - prometheus_client
+    executable: pip3
+  when: deploy_mode == "host"
+
+- name: Deploy systemd service unit (host mode)
+  ansible.builtin.template:
+    src: microservice.service.j2
+    dest: /etc/systemd/system/microservice.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: deploy_mode == "host"
+  notify: Reload systemd and restart microservice
+
+- name: Enable and start microservice service (host mode)
+  ansible.builtin.systemd:
+    name: microservice
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: deploy_mode == "host" and deploy_action == "start"
+
+- name: Disable and stop microservice service (host mode)
+  ansible.builtin.systemd:
+    name: microservice
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  when: deploy_mode == "host" and deploy_action == "remove"
+
+# КОНТЕЙНЕР
+- name: Copy Dockerfile to host (container mode)
+  ansible.builtin.copy:
+    src: Dockerfile
+    dest: /opt/microservice/Dockerfile
+    owner: root
+    group: root
+    mode: "0644"
+  when: deploy_mode == "container"
+
+- name: Build microservice Docker image (container mode)
+  community.docker.docker_image:
+    name: microservice
+    tag: latest
+    build:
+      path: /opt/microservice
+    source: build
+    force_source: true
+  when: deploy_mode == "container"
+
+- name: Run microservice container (container mode)
+  community.docker.docker_container:
+    name: microservice
+    image: microservice:latest
+    state: started
+    restart_policy: always
+    published_ports:
+      - "8080:8080"
+  when: deploy_mode == "container" and deploy_action == "start"
+
+- name: Remove microservice container (container mode)
+  community.docker.docker_container:
+    name: microservice
+    image: microservice:latest
+    state: absent
+    force_kill: true
+  when: deploy_mode == "container" and deploy_action == "remove"
+ 
+- name: Open port 8080 in firewalld
+  ansible.posix.firewalld:
+    port: 8080/tcp
+    permanent: true
+    state: enabled
+    immediate: true
+  when: deploy_action == "start"

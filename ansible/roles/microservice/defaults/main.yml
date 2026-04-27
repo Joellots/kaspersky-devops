@@ -1,0 +1,3 @@
+---
+deploy_mode: "host"
+deploy_action: "start"

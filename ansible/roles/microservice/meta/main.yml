@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  role_name: microservice
+  author: Joellots
+  description: Pазвернуть микросервис Prometheus в режиме хоста или контейнера
+  min_ansible_version: "2.12"
+
+dependencies: []

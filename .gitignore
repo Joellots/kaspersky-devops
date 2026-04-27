@@ -1,0 +1,14 @@
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+
+*.pem
+*.key
+
+__pycache__/
+*.pyc
+
+ansible.cfg
+README.md
