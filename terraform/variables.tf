@@ -5,9 +5,9 @@ variable "instance_type" {
 }
 
 variable "key_path" {
-    description = "Полный путь к паре ключей экземпляра"
+    description = "Путь к паре ключей экземпляра"
     type        = string
-    default     = "/home/joel/Downloads/labsuser.pem"
+    default     = "~/labsuser.pem"
 }
 
 variable "ami" {
